@@ -1,0 +1,17 @@
+FROM nginx:latest
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    curl \
+    nginx \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /web-page
+
+COPY . /usr/share/nginx/html
+
+# Expose the port for access
+EXPOSE 80/tcp
+
+# Run the Nginx server
+CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
