@@ -29,10 +29,10 @@ metadata:
 spec:
   selector:
     app.kubernetes.io/name: test 
-  type: NodePort
+  type: LoadBalancer
   ports:
   - protocol: TCP
     port: 80
-    targetPort: 80
-    nodePort: 31111
+    # targetPort: 80
+    nodePort: 31113
 ...
