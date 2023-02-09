@@ -1,0 +1,57 @@
+pipeline{
+    
+    environment {
+    registryCredential = 'dockerhub'
+    dockerImage = ''
+    }
+  
+    agent any
+        stages {
+    
+            stage('Checkout Source') {
+              steps {
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'mygithub', url: 'https://github.com/ThilakarP/cicd_eks_jenkins_project.git']])
+                echo 'Stage: Checkout Source completed successfully'
+              }
+            }
+
+          stage('Build Docker image') {
+              steps{
+                script {
+                    dir('web-page') {
+                            if (fileExists('dockerfile')){
+                                echo 'Docker file exists'
+                                dockerImage = docker.build ("thilakar/test:${env.BUILD_ID}")
+            				}
+                    }          
+                }
+                echo 'Stage: Executed Build Docker image'
+        		}
+            }
+            
+             stage('Pushing Image to Repository') {
+              steps{
+                script {
+                  withDockerRegistry([credentialsId: registryCredential, url: ""]) {
+                    dockerImage.push()
+                    echo 'Stage: Executed Pushing Image to Repository'
+                  }
+                }
+              }
+            }
+    
+              stage('Deployment to EKS Cluster') {
+                    steps {
+                          withAWS(credentials: 'awsCredentials', region: 'us-east-1') {
+                            sh "aws eks list-clusters"
+                            // sh "aws eks update-kubeconfig --name EKSCluster1 --region us-east-1"
+                            sh "kubectl get nodes"
+                            sh "kubectl apply -f deployment.yml"
+                            echo 'Stage: Executed Deployment to AWS EKS Cluster'
+                        }
+                    }
+                }
+
+        }
+}
+
